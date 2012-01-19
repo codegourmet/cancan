@@ -15,7 +15,7 @@ when "mongoid"
   gem "bson_ext", "~> 1.1"
   gem "mongoid", "~> 2.0.0.beta.20"
 when nil, "mongo_mapper"
-  gem "bson_ext", "~> 1.1"
+  gem "bson_ext", "~> 1.4"
   gem 'mongo_mapper', '~> 0.9.0'
 else
   raise "Unknown model adapter: #{ENV["MODEL_ADAPTER"]}"
