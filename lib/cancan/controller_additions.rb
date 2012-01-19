@@ -186,7 +186,7 @@ module CanCan
         skip_authorize_resource(*args)
       end
 
-      # Skip both the loading behavior of CanCan. This is useful when using +load_and_authorize_resource+ but want to
+      # Skip the loading behavior of CanCan. This is useful when using +load_and_authorize_resource+ but want to
       # only do authorization on certain actions. You can pass :only and :except options to specify which actions to
       # skip the effects on. It will apply to all actions by default.
       #
@@ -202,7 +202,7 @@ module CanCan
         cancan_skipper[:load][name] = options
       end
 
-      # Skip both the authorization behavior of CanCan. This is useful when using +load_and_authorize_resource+ but want to
+      # Skip the authorization behavior of CanCan. This is useful when using +load_and_authorize_resource+ but want to
       # only do loading on certain actions. You can pass :only and :except options to specify which actions to
       # skip the effects on. It will apply to all actions by default.
       #
@@ -247,9 +247,9 @@ module CanCan
       #
       def check_authorization(options = {})
         self.after_filter(options.slice(:only, :except)) do |controller|
-          return if controller.instance_variable_defined?(:@_authorized)
-          return if options[:if] && !controller.send(options[:if])
-          return if options[:unless] && controller.send(options[:unless])
+          next if controller.instance_variable_defined?(:@_authorized)
+          next if options[:if] && !controller.send(options[:if])
+          next if options[:unless] && controller.send(options[:unless])
           raise AuthorizationNotPerformed, "This action failed the check_authorization because it does not authorize_resource. Add skip_authorization_check to bypass this check."
         end
       end

@@ -35,6 +35,18 @@ describe CanCan::ControllerResource do
     @controller.instance_variable_get(:@project).should == project
   end
 
+  it "should attempt to load a resource with the same namespace as the controller when using :: for namespace" do
+    module MyEngine
+      class Project < ::Project; end
+    end
+
+    project = MyEngine::Project.create!
+    @params.merge!(:controller => "MyEngine::ProjectsController", :action => "show", :id => project.id)
+    resource = CanCan::ControllerResource.new(@controller)
+    resource.load_resource
+    @controller.instance_variable_get(:@project).should == project
+  end
+
   it "should properly load resource for namespaced controller when using '::' for namespace" do
     project = Project.create!
     @params.merge!(:controller => "Admin::ProjectsController", :action => "show", :id => project.id)
@@ -185,8 +197,8 @@ describe CanCan::ControllerResource do
 
   it "should load parent resource through proper id parameter" do
     project = Project.create!
-    @params.merge!(:action => "index", :project_id => project.id)
-    resource = CanCan::ControllerResource.new(@controller, :project, :parent => true)
+    @params.merge!(:controller => "categories", :action => "index", :project_id => project.id)
+    resource = CanCan::ControllerResource.new(@controller, :project)
     resource.load_resource
     @controller.instance_variable_get(:@project).should == project
   end
@@ -327,7 +339,15 @@ describe CanCan::ControllerResource do
     lambda { resource.load_and_authorize_resource }.should raise_error(CanCan::AccessDenied)
     @controller.instance_variable_get(:@custom_project).should == project
   end
-
+  
+  it "should load resource using custom ID param" do
+    project = Project.create!
+    @params.merge!(:action => "show", :the_project => project.id)
+    resource = CanCan::ControllerResource.new(@controller, :id_param => :the_project)
+    resource.load_resource
+    @controller.instance_variable_get(:@project).should == project
+  end
+  
   it "should load resource using custom find_by attribute" do
     project = Project.create!(:name => "foo")
     @params.merge!(:action => "show", :id => "foo")

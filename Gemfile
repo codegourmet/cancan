@@ -4,8 +4,8 @@ source "http://rubygems.org"
 case ENV["MODEL_ADAPTER"]
 when "active_record"
   gem "sqlite3"
-  gem "activerecord", :require => "active_record"
-  gem "with_model"
+  gem "activerecord", '~> 3.0.9', :require => "active_record"
+  gem "with_model", '~> 0.1.5'
   gem "meta_where"
 when "data_mapper"
   gem "dm-core", "~> 1.0.2"

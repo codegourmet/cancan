@@ -121,11 +121,15 @@ module CanCan
     end
 
     def id_param
-      @params[parent? ? :"#{name}_id" : :id]
+      if @options[:id_param]
+        @params[@options[:id_param]]
+      else
+        @params[parent? ? :"#{name}_id" : :id]
+      end
     end
 
     def member_action?
-      new_actions.include?(@params[:action].to_sym) || @options[:singleton] || (@params[:id] && !collection_actions.include?(@params[:action].to_sym))
+      new_actions.include?(@params[:action].to_sym) || @options[:singleton] || ( (@params[:id] || @params[@options[:id_param]]) && !collection_actions.include?(@params[:action].to_sym))
     end
 
     # Returns the class used for this resource. This can be overriden by the :class option.
@@ -134,7 +138,7 @@ module CanCan
     def resource_class
       case @options[:class]
       when false  then name.to_sym
-      when nil    then name.to_s.camelize.constantize
+      when nil    then namespaced_name.to_s.camelize.constantize
       when String then @options[:class].constantize
       else @options[:class]
       end
@@ -201,6 +205,12 @@ module CanCan
 
     def name
       @name || name_from_controller
+    end
+
+    def namespaced_name
+      @name || @params[:controller].sub("Controller", "").singularize.camelize.constantize
+    rescue NameError
+      name
     end
 
     def name_from_controller
