@@ -35,7 +35,7 @@ module CanCan
               if rule.conditions.is_a?(Hash)
                 records.where rule.conditions
               else
-                records.where(rule.conditions.criteria)
+                records.merge(rule.conditions)
               end
             elsif !rule.base_behavior
               records.remove rule.conditions
