@@ -32,7 +32,11 @@ module CanCan
           process_can_rules = @rules.count == rules.count
           rules.inject(@model_class.where) do |records, rule|
             if process_can_rules && rule.base_behavior
-              records.where rule.conditions
+              if rule.conditions.is_a?(Hash)
+                records.where rule.conditions
+              else
+                records.where(rule.conditions.criteria)
+              end
             elsif !rule.base_behavior
               records.remove rule.conditions
               records
