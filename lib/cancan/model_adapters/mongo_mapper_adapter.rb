@@ -5,9 +5,24 @@ module CanCan
         model_class <= MongoMapper::Document
       end
 
+      def self.override_conditions_hash_matching?(subject, conditions)
+        conditions.any? do |k,v|
+          key_is_not_symbol = lambda { !k.kind_of?(Symbol) }
+          subject_value_is_array = lambda do
+            subject.respond_to?(k) && subject.send(k).is_a?(Array)
+          end
+
+          key_is_not_symbol.call || subject_value_is_array.call
+        end
+      end
+
+      def self.matches_conditions_hash?(subject, conditions)
+        subject.class.where(conditions).include? subject
+      end
+
       def database_records
         if @rules.size == 0
-          @model_class.where(:_id => {'$exists' => false, '$type' => 7})
+          @model_class.where(:_id => {:$exists => false, :$type => 7}) # return no records
         elsif @rules.size == 1 && @rules[0].conditions.is_a?(Hash)
           @model_class.where(@rules[0].conditions)
         else
@@ -15,27 +30,21 @@ module CanCan
           # there are no rules with empty conditions
           rules = @rules.reject { |rule| rule.conditions.empty? }
           process_can_rules = @rules.count == rules.count
-
-          rules.inject( @model_class.limit(999999) ) do |records, rule|
-
+          rules.inject(@model_class.where) do |records, rule|
             if process_can_rules && rule.base_behavior
-              records.where(:$or=> [rule.conditions])
+              records.where rule.conditions
             elsif !rule.base_behavior
-              neg_conds = {} 
-              rule.conditions.each_pair do |k,v|  
-                  neg_conds[k] = { :$ne => v }
-              end
-              records.where(neg_conds)
+              records.remove rule.conditions
+              records
             else
               records
             end
           end
         end
       end
-      
-    end # class MongoMapperAdapter
-  end # module ModelAdapters
-end # module CanCan
+    end
+  end
+end
 
 module MongoMapper::Document::ClassMethods
   include CanCan::ModelAdditions::ClassMethods
