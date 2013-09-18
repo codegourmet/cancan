@@ -38,8 +38,11 @@ module CanCan
                 records.merge(rule.conditions)
               end
             elsif !rule.base_behavior
-              records.remove rule.conditions
-              records
+              neg_conds = {}
+              rule.conditions.each_pair do |k,v|
+                neg_conds[k] = { :$ne => v }
+              end
+              records.where(neg_conds)
             else
               records
             end
